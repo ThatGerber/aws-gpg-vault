@@ -31,7 +31,19 @@ credentials prepared.
   ```
 6. Remove old section from `$HOME/.aws/credentials`.
 
+# go/x/crypto/openpgp and GPG
+
+The choice to shell out commands to the CLI instead of using the Golang Crypto
+library was a conscious choice. Google's openpgp library is several years out of
+date and is unable to handle gpg > 2.1. This means no new keyrings, no smartcard
+support, and in turn, no Yubikey support.
+
+It could be possible to send commands directly to the GPG agent (using Assuan,
+GPG's IPC), but there exists no library yet for Assuan in Golang. So, once one
+is written, by myself or others, I'll update the application to utilize it.
+
 # TODO
 
-[] Support STS Credentials
-[] Add method of adding/updating credentials
+* [] Support STS Credentials
+* [] Add method of adding/updating credentials
+* [] Use the gpgagent socket and Assuan instead of shelling out commands
