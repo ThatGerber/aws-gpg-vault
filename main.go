@@ -3,21 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
-	// "github.com/keybase/go-crypto/openpgp"
-	// "go.mozilla.org/sops/pgp"
-	// "io"
-	// "io/ioutil"
 	"encoding/json"
 	"log"
 	"os"
 	"os/user"
 	"path"
-	// "os/exec"
-	// "strings"
 )
 
-// PasswordTriesLimit refers to the number of times someone can attempt to
-// decrypt a password before it fails and exists.
 var (
 	AWSCredsVaultBaseDir = ".aws/creds-vault"
 )
@@ -61,21 +53,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// gpg.Fingerprints(&buf)
-	cnf := &GPGCommandConfig{}
-
 	f, err := os.Open(getVaultFile(awsProfile))
 	defer f.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	cnf := &GPGCommandConfig{}
 	cnf.Stdin = f
-	// cnf.Args = []string{DefaultEncryptedFile}
+	
 	gpg.Decrypt(&buf, cnf)
 	creds := AWSCredentials{}
-	log.Println(buf.String())
 	json.Unmarshal(buf.Bytes(), &creds)
 	fmt.Print(creds.String())
-	// gpgKeyID := ""
 }

@@ -3,12 +3,8 @@ package main
 import (
 	"bytes"
 	"errors"
-	// "fmt"
 	"io"
-	// "log"
-	// "os"
 	"os/exec"
-	// "strings"
 )
 
 var (
@@ -19,9 +15,9 @@ var (
 type GPGCommander struct {
 	exec    *exec.Cmd
 	gpgPath *bytes.Buffer
-	KeyID   []byte
 }
 
+// GPGCommandConfig contains command config for GPG.
 type GPGCommandConfig struct {
 	Stdin io.Reader
 	Args  []string
