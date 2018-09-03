@@ -3,66 +3,53 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"encoding/json"
 	"log"
 	"os"
 	"os/user"
 	"path"
 )
 
-var (
-	AWSCredsVaultBaseDir = ".aws/creds-vault"
-)
+var defaultLogFilePath = ".aws/creds-vault/vault.log"
 
-func getVaultFile(p string) string {
-	d := getVaultDir()
-	r := path.Join(d, p)
+func main() {
+	var appLog *os.File
 
-	return r
-}
-
-func getVaultDir() string {
 	u, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
 	}
-	p := path.Join(u.HomeDir, AWSCredsVaultBaseDir)
+	lgFilePath := path.Join(u.HomeDir, defaultLogFilePath)
 
-	return p
-}
-
-func getProfile() string {
-	if len(os.Args) == 2 {
-		return os.Args[1]
-	}
-	if pr := os.Getenv("AWS_PROFILE"); len(pr) != 0 {
-		return pr
-	}
-	if dpr := os.Getenv("AWS_DEFAULT_PROFILE"); len(dpr) != 0 {
-		return dpr
+	appLog, err = os.OpenFile(lgFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0640)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	return ""
-}
+	profile, err := getAWSProfile()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-func main() {
-	awsProfile := getProfile()
+	vaultFile, err := GetVaultFile(profile)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	var buf bytes.Buffer
-	gpg, err := NewGPGCommander()
-	if err != nil {
-		log.Fatal(err)
-	}
-	f, err := os.Open(getVaultFile(awsProfile))
-	defer f.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
 	cnf := &GPGCommandConfig{}
-	cnf.Stdin = f
-	
-	gpg.Decrypt(&buf, cnf)
-	creds := AWSCredentials{}
-	json.Unmarshal(buf.Bytes(), &creds)
-	fmt.Print(creds.String())
+	cnf.Stdin = vaultFile
+	cnf.Stdout = vaultFile
+	cnf.Stderr = &buf
+
+	gpg, err := NewGPGCommander(cnf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gpg.Decrypt(nil, cnf)
+
+	log.SetOutput(appLog)
+	log.Print(buf.String())
+
+	fmt.Printf("%s", vaultFile.Credentials)
 }
