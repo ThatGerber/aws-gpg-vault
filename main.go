@@ -20,11 +20,6 @@ func main() {
 	}
 	lgFilePath := path.Join(u.HomeDir, defaultLogFilePath)
 
-	appLog, err = os.OpenFile(lgFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0640)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	profile, err := getAWSProfile()
 	if err != nil {
 		log.Fatal(err)
@@ -48,6 +43,10 @@ func main() {
 
 	gpg.Decrypt(nil, cnf)
 
+	appLog, err = os.OpenFile(lgFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0640)
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.SetOutput(appLog)
 	log.Print(buf.String())
 
